@@ -5,32 +5,33 @@ import (
 	"time"
 )
 
-// TimeMachine は現在の時間を返す now を実装している。nowFunc が nil のとき now はローカルの現在の時間を返す。
-// non-nil では now は nowFunc 呼び出す。つまり nowFunc が返す値によって現在の時間を操作することができる。
-// context に入れると良さそう。
-type TimeMachine struct {
-	NowFunc func() time.Time
-}
+// TimeMachine は現在の時間を返す Now を実装している。
+type NowFunc func() time.Time
 
-func (tm TimeMachine) Now() time.Time {
-	if tm.NowFunc == nil {
+// Now は NowFunc が nil のときローカルの現在の時間を返す。
+// non-nil では NowFunc 呼び出す。つまり NowFunc が返す値によって現在の時間を操作することができる。
+// context に入れて使うことを想定している。
+func (f NowFunc) Now() time.Time {
+	if f == nil {
 		return time.Now()
 	}
-	return tm.NowFunc()
+	return f()
 }
 
 type key int
 
-var timeMachineKey key
+var nowFuncKey key
 
-func NewContext(ctx context.Context, tm TimeMachine) context.Context {
-	return context.WithValue(ctx, timeMachineKey, tm)
+func NewContext(ctx context.Context, f NowFunc) context.Context {
+	return context.WithValue(ctx, nowFuncKey, f)
 }
 
-func FromContext(ctx context.Context) TimeMachine {
-	tm, ok := ctx.Value(timeMachineKey).(TimeMachine)
-	if !ok {
-		return TimeMachine{}
-	}
-	return tm
+func FromContext(ctx context.Context) (NowFunc, bool) {
+	f, ok := ctx.Value(nowFuncKey).(NowFunc)
+	return f, ok
+}
+
+func Now(ctx context.Context) time.Time {
+	f, _ := FromContext(ctx)
+	return f.Now()
 }
