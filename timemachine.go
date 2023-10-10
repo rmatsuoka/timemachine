@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// TimeMachine は現在の時間を返す Now を実装している。
+// NowFunc は現在の時間を返す Now を実装している。
 type NowFunc func() time.Time
 
 // Now は NowFunc が nil のときローカルの現在の時間を返す。
