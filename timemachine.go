@@ -23,11 +23,11 @@ type key int
 
 var timeMachineKey key
 
-func ContextWithTimeMachine(ctx context.Context, tm TimeMachine) context.Context {
+func NewContext(ctx context.Context, tm TimeMachine) context.Context {
 	return context.WithValue(ctx, timeMachineKey, tm)
 }
 
-func TimeMachineFromContext(ctx context.Context) TimeMachine {
+func FromContext(ctx context.Context) TimeMachine {
 	tm, ok := ctx.Value(timeMachineKey).(TimeMachine)
 	if !ok {
 		return TimeMachine{}
