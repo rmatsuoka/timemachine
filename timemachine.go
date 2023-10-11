@@ -5,13 +5,10 @@ import (
 	"time"
 )
 
-// NowFunc は現在の時間を返す Now を実装している。
+// NowFunc はタイムマシン上の現在の時間を返す関数。
 type NowFunc func() time.Time
 
-// Now は NowFunc が nil のときローカルの現在の時間を返す。
-// non-nil では NowFunc 呼び出す。つまり NowFunc が返す値によって現在の時間を操作することができる。
-// context に入れて使うことを想定している。
-func (f NowFunc) Now() time.Time {
+func now(f NowFunc) time.Time {
 	if f == nil {
 		return time.Now()
 	}
@@ -31,7 +28,21 @@ func FromContext(ctx context.Context) (NowFunc, bool) {
 	return f, ok
 }
 
+// Now は　NowFunc が ctx に存在しないとき、または存在しても nil のときはローカルの現在の時間を返す。
+// もし存在すれば NowFunc 呼び出す。
 func Now(ctx context.Context) time.Time {
 	f, _ := FromContext(ctx)
-	return f.Now()
+	return now(f)
+}
+
+// Clock はタイムマシン上の現在の時間を返す Now を実装している。ゼロ値で使うことができる。
+type Clock struct {
+	// Func をセットしていると (Clock).Now はこの値を返す。
+	Func NowFunc
+}
+
+// Now は Func が nil なら実際のローカルの現在の時間を返す。
+// non-nil であれば、 NowFunc を呼び出す。
+func (c Clock) Now() time.Time {
+	return now(c.Func)
 }
